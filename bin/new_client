@@ -1,0 +1,46 @@
+#!/bin/sh
+set -e
+
+[ "$CLIENT_NAME" ] || {
+    echo "No client name passed. Use environment variable CLIENT_NAME."
+    exit 1
+}
+
+cd /etc/openvpn
+[ -f ${CLIENT_NAME}-key.pem ] ||
+    openssl genrsa -out ${CLIENT_NAME}-key.pem 2048
+    chmod 600 ${CLIENT_NAME}-key.pem
+[ -f ${CLIENT_NAME}-csr.pem ] ||
+    openssl req -new -key key.pem -out ${CLIENT_NAME}-csr.pem -subj /CN=${CLIENT_NAME}/
+[ -f ${CLIENT_NAME}-cert.pem ] ||
+    openssl x509 -req -in ${CLIENT_NAME}-csr.pem -out ${CLIENT_NAME}-cert.pem -signkey key.pem -days 36525
+
+[ -f ${CLIENT_NAME}.ovpn ] || cat > ${CLIENT_NAME}.ovpn <<EOF
+client
+nobind
+dev tun
+redirect-gateway def1
+
+<key>
+`cat ${CLIENT_NAME}-key.pem`
+</key>
+<cert>
+`cat ${CLIENT_NAME}-cert.pem`
+</cert>
+<ca>
+`cat cert.pem`
+</ca>
+<dh>
+`cat dh.pem`
+</dh>
+
+<connection>
+remote $MY_IP_ADDR 1194 udp
+</connection>
+
+<connection>
+remote $MY_IP_ADDR 443 tcp-client
+</connection>
+EOF
+
+cat ${CLIENT_NAME}.ovpn
