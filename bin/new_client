@@ -42,7 +42,7 @@ redirect-gateway def1
 `cat ${CLIENT_NAME}-cert.pem`
 </cert>
 <ca>
-`cat cert.pem`
+`cat ca.pem`
 </ca>
 <dh>
 `cat dh.pem`

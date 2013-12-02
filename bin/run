@@ -12,20 +12,28 @@ cd /etc/openvpn
 [ -f ca_pk.pem ] ||
     openssl genrsa -out ca_pk.pem 2048
 chmod 600 ca_pk.pem
-[ -f csr.pem ] ||
-    openssl req -new -key ca_pk.pem -out csr.pem -subj /CN=OpenVPN/
+[ -f ca_csr.pem ] ||
+    openssl req -new -key ca_pk.pem -out ca_csr.pem -subj /CN=DockVPN_CA/
 [ -f ca.pem ] ||
-    openssl x509 -req -in csr.pem -out ca.pem -signkey ca_pk.pem -days 36525
+    openssl x509 -req -in ca_csr.pem -out ca.pem -signkey ca_pk.pem -days 36525
 [ -f ca.srl ] ||
     echo 01 > ca.srl
+
+[ -f server_pk.pem ] ||
+    openssl genrsa -out server_pk.pem 2048
+chmod 600 server_pk.pem
+[ -f server_csr.pem ] ||
+    openssl req -new -key server_pk.pem -out server_csr.pem -subj /CN=OpenVPN_Server/
+[ -f server.pem ] ||
+    openssl x509 -req -in server_csr.pem -out server.pem -CA ca.pem -CAkey ca_pk.pem -days 36525
 
 [ -f tcp443.conf ] || cat >tcp443.conf <<EOF
 server 192.168.255.0 255.255.255.128
 verb 3
 duplicate-cn
-key ca_pk.pem
 ca ca.pem
-cert ca.pem
+cert server.pem
+key server_pk.pem
 dh dh.pem
 keepalive 10 60
 persist-key
