@@ -59,12 +59,12 @@ The ./scripts/start script takes the following arguments:
 The ./scripts/new_client script takes the following arguments:
 
 ```
--i <NAT_IP>     The external IP address of the system that the client
+-i <EXT_IP>     The external IP address of the system that the client
                 should use to connect to the VPN.
                 If this argument is not passed, the script will attempt 
                 to infer the system's IP using the http://myip.enix.org/ service.
 
--p <NAT_PORT>   The external port of the system, which may be different
+-p <EXT_PORT>   The external port of the system, which may be different
                 if the server is NAT'ed.
                 If NAT is in use, set this to the WAN port that is being forwarded
                 to LOCAL_IP:LOCAL_PORT.
