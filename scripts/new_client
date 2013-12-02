@@ -1,2 +1,44 @@
 #!/bin/bash
-sudo docker run -e CLIENT_NAME=$1 -v /etc/openvpn:/etc/openvpn:rw -privileged symmetric/dockvpn new_client
+usage() {
+    echo "Usage: $0 -c CLIENT_NAME [-i <EXT_IP] [-p EXT_PORT] [-d CA_DIR]" >&2
+}
+
+CA_DIR="/etc/openvpn"
+
+while getopts ":c:i:p:d:h" o; do
+    case "${o}" in
+        c)
+            CLIENT_NAME=$OPTARG
+            echo "Got CLIENT_NAME=$CLIENT_NAME"
+            ;;
+        i)
+            EXT_IP=$OPTARG
+            echo "Got EXT_IP=$EXT_IP"
+            ;;
+        p)
+            EXT_PORT=$OPTARG
+            echo "Got EXT_PORT=$EXT_PORT"
+            ;;
+        d)
+            CA_DIR=$OPTARG
+            echo "Got CA_DIR=$CA_DIR"
+            ;;
+        h)
+            usage
+            exit 0
+            ;;
+        \?)
+            echo "Invalid option $OPTARG"
+            usage
+            exit 1
+            ;;
+    esac
+done
+
+[ "$CLIENT_NAME" ] || {
+    echo "Must specify client name with the -c flag."
+    exit 1
+}
+
+sudo docker run -e CLIENT_NAME=$CLIENT_NAME -e EXT_IP=$EXT_IP -e EXT_PORT=$EXT_PORT -v $CA_DIR:/etc/openvpn:rw -privileged symmetric/dockvpn new_client
+

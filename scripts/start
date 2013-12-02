@@ -1,2 +1,37 @@
 #!/bin/bash
-sudo docker run -d -v /etc/openvpn:/etc/openvpn:rw -privileged -p 443:443/tcp symmetric/dockvpn
+usage() {
+    echo "Usage: $0 [-i <LOCAL_IP] [-p LOCAL_PORT] [-d CA_DIR]" >&2
+}
+
+LOCAL_PORT=443
+CA_DIR="/etc/openvpn"
+
+# add :i:p: in production
+while getopts ":i:p:d:h" o; do
+    case "${o}" in
+        i)
+            LOCAL_IP=$OPTARG
+            echo "Got LOCAL_IP=$LOCAL_IP"
+            ;;
+        p)
+            LOCAL_PORT=$OPTARG
+            echo "Got LOCAL_PORT=$LOCAL_PORT"
+            ;;
+        d)
+            CA_DIR=$OPTARG
+            echo "Got CA_DIR=$CA_DIR"
+            ;;
+        h)
+            usage
+            exit 0
+            ;;
+        \?)
+            echo "Invalid option $OPTARG"
+            usage
+            exit 1
+            ;;
+    esac
+done
+
+sudo docker run -e LOCAL_IP=$LOCAL_IP -e LOCAL_PORT=$LOCAL_PORT -d -v $CA_DIR:/etc/openvpn:rw -privileged -p $LOCAL_PORT:$LOCAL_PORT/tcp symmetric/dockvpn
+

@@ -7,26 +7,26 @@ set -e
 }
 
 cd /etc/openvpn
-[ -f ${CLIENT_NAME}-key.pem ] ||
-    openssl genrsa -out ${CLIENT_NAME}-key.pem 2048
-    chmod 600 ${CLIENT_NAME}-key.pem
-[ -f ${CLIENT_NAME}-csr.pem ] ||
-    openssl req -new -key ${CLIENT_NAME}-key.pem -out ${CLIENT_NAME}-csr.pem -subj /CN=${CLIENT_NAME}/
-[ -f ${CLIENT_NAME}-cert.pem ] ||
-    openssl x509 -req -in ${CLIENT_NAME}-csr.pem -out ${CLIENT_NAME}-cert.pem -CA ca.pem -CAkey ca_pk.pem -days 36525
+[ -f ${CLIENT_NAME}_key.pem ] ||
+    openssl genrsa -out ${CLIENT_NAME}_key.pem 2048
+    chmod 600 ${CLIENT_NAME}_key.pem
+[ -f ${CLIENT_NAME}_csr.pem ] ||
+    openssl req -new -key ${CLIENT_NAME}_key.pem -out ${CLIENT_NAME}_csr.pem -subj /CN=${CLIENT_NAME}/
+[ -f ${CLIENT_NAME}_cert.pem ] ||
+    openssl x509 -req -in ${CLIENT_NAME}_csr.pem -out ${CLIENT_NAME}_cert.pem -CA ca.pem -CAkey ca_pk.pem -days 36525
 
-[ "$MY_IP_ADDR" ] || {
-    MY_IP_ADDR=$(curl -s http://myip.enix.org/REMOTE_ADDR)
-    echo "Discovered IP $MY_IP_ADDR - set MY_IP_ADDR env variable to override."
+[ "$EXT_IP" ] || {
+    EXT_IP=$(curl -s http://myip.enix.org/REMOTE_ADDR)
+    echo "Discovered IP $EXT_IP - set EXT_IP env variable to override."
 }
-[ "$MY_IP_ADDR" ] || {
+[ "$EXT_IP" ] || {
     echo "Sorry, I could not figure out my public IP address."
     echo "(I use http://myip.enix.org/REMOTE_ADDR/ for that purpose.)"
     exit 1
 }
-[ "$MY_PORT" ] || {
-    MY_PORT=443
-    echo "Using default port $MY_PORT - set MY_PORT env variable to override."
+[ "$EXT_PORT" ] || {
+    EXT_PORT=443
+    echo "Using default port $EXT_PORT - set EXT_PORT env variable to override."
 }
 
 [ -f ${CLIENT_NAME}.ovpn ] || cat > ${CLIENT_NAME}.ovpn <<EOF
@@ -36,10 +36,10 @@ dev tun
 redirect-gateway def1
 
 <key>
-`cat ${CLIENT_NAME}-key.pem`
+`cat ${CLIENT_NAME}_key.pem`
 </key>
 <cert>
-`cat ${CLIENT_NAME}-cert.pem`
+`cat ${CLIENT_NAME}_cert.pem`
 </cert>
 <ca>
 `cat ca.pem`
@@ -49,7 +49,7 @@ redirect-gateway def1
 </dh>
 
 <connection>
-remote $MY_IP_ADDR $MY_PORT tcp-client
+remote $EXT_IP $EXT_PORT tcp-client
 </connection>
 EOF
 

@@ -27,10 +27,9 @@ chmod 600 server_pk.pem
 [ -f server.pem ] ||
     openssl x509 -req -in server_csr.pem -out server.pem -CA ca.pem -CAkey ca_pk.pem -days 36525
 
-[ -f tcp443.conf ] || cat >tcp443.conf <<EOF
+[ -f tcp${LOCAL_PORT}.conf ] || cat >tcp${LOCAL_PORT}.conf <<EOF
 server 192.168.255.0 255.255.255.128
 verb 3
-duplicate-cn
 ca ca.pem
 cert server.pem
 key server_pk.pem
@@ -40,13 +39,16 @@ persist-key
 persist-tun
 
 proto tcp-server
-port 443
-dev tun443
-status openvpn-status-443.log
+port ${LOCAL_PORT}
+dev tun${LOCAL_PORT}
+status openvpn-status-${LOCAL_PORT}.log
 EOF
 
-[ "$MY_IP_ADDR" ] || MY_IP_ADDR=$(curl -s http://myip.enix.org/REMOTE_ADDR)
-[ "$MY_IP_ADDR" ] || {
+[ "$LOCAL_IP" ] || {
+    LOCAL_IP=$(curl -s http://myip.enix.org/REMOTE_ADDR)
+    echo "Discovered IP $LOCAL_IP - set LOCAL_IP env variable to override."
+}
+[ "$LOCAL_IP" ] || {
     echo "Sorry, I could not figure out my public IP address."
     echo "(I use http://myip.enix.org/REMOTE_ADDR/ for that purpose.)"
     exit 1
@@ -54,6 +56,6 @@ EOF
 
 iptables -t nat -A POSTROUTING -s 192.168.255.0/24 -o eth0 -j MASQUERADE
 
-touch tcp443.log http8080.log
-while true ; do openvpn tcp443.conf ; done >> tcp443.log &
+touch tcp${LOCAL_PORT}.log
+while true ; do openvpn tcp${LOCAL_PORT}.conf ; done >> tcp${LOCAL_PORT}.log &
 tail -F *.log
