@@ -15,11 +15,18 @@ cd /etc/openvpn
 [ -f ${CLIENT_NAME}-cert.pem ] ||
     openssl x509 -req -in ${CLIENT_NAME}-csr.pem -out ${CLIENT_NAME}-cert.pem -CA ca.pem -CAkey ca_pk.pem -days 36525
 
-[ "$MY_IP_ADDR" ] || MY_IP_ADDR=$(curl -s http://myip.enix.org/REMOTE_ADDR)
+[ "$MY_IP_ADDR" ] || {
+    MY_IP_ADDR=$(curl -s http://myip.enix.org/REMOTE_ADDR)
+    echo "Discovered IP $MY_IP_ADDR - set MY_IP_ADDR env variable to override."
+}
 [ "$MY_IP_ADDR" ] || {
     echo "Sorry, I could not figure out my public IP address."
     echo "(I use http://myip.enix.org/REMOTE_ADDR/ for that purpose.)"
     exit 1
+}
+[ "$MY_PORT" ] || {
+    MY_PORT=443
+    echo "Using default port $MY_PORT - set MY_PORT env variable to override."
 }
 
 [ -f ${CLIENT_NAME}.ovpn ] || cat > ${CLIENT_NAME}.ovpn <<EOF
@@ -42,8 +49,7 @@ redirect-gateway def1
 </dh>
 
 <connection>
-remote $MY_IP_ADDR 443 tcp-client
+remote $MY_IP_ADDR $MY_PORT tcp-client
 </connection>
 EOF
 
-cat ${CLIENT_NAME}.ovpn
