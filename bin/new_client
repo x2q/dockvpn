@@ -11,9 +11,16 @@ cd /etc/openvpn
     openssl genrsa -out ${CLIENT_NAME}-key.pem 2048
     chmod 600 ${CLIENT_NAME}-key.pem
 [ -f ${CLIENT_NAME}-csr.pem ] ||
-    openssl req -new -key key.pem -out ${CLIENT_NAME}-csr.pem -subj /CN=${CLIENT_NAME}/
+    openssl req -new -key ${CLIENT_NAME}-key.pem -out ${CLIENT_NAME}-csr.pem -subj /CN=${CLIENT_NAME}/
 [ -f ${CLIENT_NAME}-cert.pem ] ||
-    openssl x509 -req -in ${CLIENT_NAME}-csr.pem -out ${CLIENT_NAME}-cert.pem -signkey key.pem -days 36525
+    openssl x509 -req -in ${CLIENT_NAME}-csr.pem -out ${CLIENT_NAME}-cert.pem -CA ca.pem -CAkey ca_pk.pem -days 36525
+
+[ "$MY_IP_ADDR" ] || MY_IP_ADDR=$(curl -s http://myip.enix.org/REMOTE_ADDR)
+[ "$MY_IP_ADDR" ] || {
+    echo "Sorry, I could not figure out my public IP address."
+    echo "(I use http://myip.enix.org/REMOTE_ADDR/ for that purpose.)"
+    exit 1
+}
 
 [ -f ${CLIENT_NAME}.ovpn ] || cat > ${CLIENT_NAME}.ovpn <<EOF
 client
@@ -33,10 +40,6 @@ redirect-gateway def1
 <dh>
 `cat dh.pem`
 </dh>
-
-<connection>
-remote $MY_IP_ADDR 1194 udp
-</connection>
 
 <connection>
 remote $MY_IP_ADDR 443 tcp-client

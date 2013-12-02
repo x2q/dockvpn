@@ -9,21 +9,21 @@ set -e
 cd /etc/openvpn
 [ -f dh.pem ] ||
     openssl dhparam -out dh.pem 512
-[ -f key.pem ] ||
-    openssl genrsa -out key.pem 2048
-chmod 600 key.pem
+[ -f ca_pk.pem ] ||
+    openssl genrsa -out ca_pk.pem 2048
+chmod 600 ca_pk.pem
 [ -f csr.pem ] ||
-    openssl req -new -key key.pem -out csr.pem -subj /CN=OpenVPN/
-[ -f cert.pem ] ||
-    openssl x509 -req -in csr.pem -out cert.pem -signkey key.pem -days 36525
+    openssl req -new -key ca_pk.pem -out csr.pem -subj /CN=OpenVPN/
+[ -f ca.pem ] ||
+    openssl x509 -req -in csr.pem -out ca.pem -signkey ca_pk.pem -days 36525
 
 [ -f tcp443.conf ] || cat >tcp443.conf <<EOF
 server 192.168.255.0 255.255.255.128
 verb 3
 duplicate-cn
-key key.pem
-ca cert.pem
-cert cert.pem
+key ca_pk.pem
+ca ca.pem
+cert ca.pem
 dh dh.pem
 keepalive 10 60
 persist-key
@@ -35,7 +35,7 @@ dev tun443
 status openvpn-status-443.log
 EOF
 
-MY_IP_ADDR=$(curl -s http://myip.enix.org/REMOTE_ADDR)
+[ "$MY_IP_ADDR" ] || MY_IP_ADDR=$(curl -s http://myip.enix.org/REMOTE_ADDR)
 [ "$MY_IP_ADDR" ] || {
     echo "Sorry, I could not figure out my public IP address."
     echo "(I use http://myip.enix.org/REMOTE_ADDR/ for that purpose.)"
@@ -49,13 +49,13 @@ dev tun
 redirect-gateway def1
 
 <key>
-`cat key.pem`
+`cat ca_pk.pem`
 </key>
 <cert>
-`cat cert.pem`
+`cat ca.pem`
 </cert>
 <ca>
-`cat cert.pem`
+`cat ca.pem`
 </ca>
 <dh>
 `cat dh.pem`
