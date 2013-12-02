@@ -1,0 +1,2 @@
+#!/bin/bash
+sudo docker run -e CLIENT_NAME=$1 -v /etc/openvpn:/etc/openvpn:rw -privileged symmetric/dockvpn new_client
