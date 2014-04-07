@@ -24,7 +24,7 @@ be able to reconnect with their existing config.
 
 ## How does it work?
 
-When the `symmetric/dockvpn` image is started, it generates:
+When the `pvisintin/dockvpn` image is started, it generates:
 
 - Diffie-Hellman parameters
 - a CA private key

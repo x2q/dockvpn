@@ -1,2 +1,2 @@
 #!/bin/bash
-sudo docker run -i -t -v /etc/openvpn:/etc/openvpn:rw -privileged symmetric/dockvpn /bin/bash
+sudo docker run -i -t -v /etc/openvpn:/etc/openvpn:rw --privileged pvisintin/dockvpn /bin/bash
