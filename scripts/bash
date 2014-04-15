@@ -1,2 +1,2 @@
 #!/bin/bash
-sudo docker -H tcp://127.0.0.1:4243 run -i -t -v /etc/openvpn:/etc/openvpn:rw --privileged pvisintin/dockvpn /bin/bash
+sudo docker run -i -t -v /etc/openvpn:/etc/openvpn:rw --privileged pvisintin/dockvpn /bin/bash
